@@ -125,6 +125,7 @@ impl Add<Nanos> for Duration {
 /// The mock time is represented as an atomic u64 count of nanoseconds, behind an [`Arc`].
 /// Clones of this clock will all show the same time, even if the original advances.
 #[derive(Debug, Clone, Default)]
+#[repr(transparent)]
 pub struct FakeRelativeClock {
     now: Arc<AtomicU64>,
 }

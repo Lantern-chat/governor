@@ -13,6 +13,7 @@ use std::time::Duration;
 /// atomic read, but requires a background thread that wakes up continually),
 /// see [`QuantaUpkeepClock`].
 #[derive(Debug, Clone, Default)]
+#[repr(transparent)]
 pub struct QuantaClock(quanta::Clock);
 
 impl From<quanta::Instant> for Nanos {
@@ -77,10 +78,7 @@ impl QuantaUpkeepClock {
     /// Returns a new `QuantaUpkeepClock` with an upkeep thread as specified by the given builder.
     pub fn from_builder(builder: quanta::Upkeep) -> Result<QuantaUpkeepClock, quanta::Error> {
         let handle = builder.start()?;
-        Ok(QuantaUpkeepClock(
-            quanta::Clock::default(),
-            Arc::new(handle),
-        ))
+        Ok(QuantaUpkeepClock(quanta::Clock::default(), Arc::new(handle)))
     }
 }
 

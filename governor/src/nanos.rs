@@ -13,6 +13,7 @@ use std::time::Duration;
 /// Nanos can not represent durations >584 years, but hopefully that
 /// should not be a problem in real-world applications.
 #[derive(PartialEq, Eq, Default, Clone, Copy, PartialOrd, Ord)]
+#[repr(transparent)]
 pub struct Nanos(u64);
 
 impl Nanos {

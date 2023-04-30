@@ -18,6 +18,7 @@ use std::time::Duration;
 /// Internally, the number tracked here is the theoretical arrival time (a GCRA term) in number of
 /// nanoseconds since the rate limiter was created.
 #[derive(Default)]
+#[repr(transparent)]
 pub struct InMemoryState(AtomicU64);
 
 impl InMemoryState {
@@ -28,12 +29,10 @@ impl InMemoryState {
         let mut prev = self.0.load(Ordering::Acquire);
         let mut decision = f(NonZeroU64::new(prev).map(|n| n.get().into()));
         while let Ok((result, new_data)) = decision {
-            match self.0.compare_exchange_weak(
-                prev,
-                new_data.into(),
-                Ordering::Release,
-                Ordering::Relaxed,
-            ) {
+            match self
+                .0
+                .compare_exchange_weak(prev, new_data.into(), Ordering::Release, Ordering::Relaxed)
+            {
                 Ok(_) => return Ok(result),
                 Err(next_prev) => prev = next_prev,
             }
