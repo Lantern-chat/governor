@@ -86,13 +86,29 @@ where
     C: clock::Clock,
     MW: RateLimitingMiddleware<C::Instant>,
 {
+    /// Like [`check_key`](RateLimiter::check_key), but with a custom instant now
+    pub fn check_key_at(&self, key: &K, now: C::Instant) -> Result<MW::PositiveOutcome, MW::NegativeOutcome> {
+        self.gcra
+            .test_and_update::<K, C::Instant, S, MW>(self.start, key, &self.state, now)
+    }
+
     /// Allow a single cell through the rate limiter for the given key.
     ///
     /// If the rate limit is reached, `check_key` returns information about the earliest
     /// time that a cell might be allowed through again under that key.
     pub fn check_key(&self, key: &K) -> Result<MW::PositiveOutcome, MW::NegativeOutcome> {
+        self.check_key_at(key, self.clock.now())
+    }
+
+    /// Like [`check_key_n`](RateLimiter::check_key_n), but with a custom instant now
+    pub fn check_key_n_at(
+        &self,
+        key: &K,
+        n: NonZeroU32,
+        now: C::Instant,
+    ) -> Result<Result<MW::PositiveOutcome, MW::NegativeOutcome>, InsufficientCapacity> {
         self.gcra
-            .test_and_update::<K, C::Instant, S, MW>(self.start, key, &self.state, self.clock.now())
+            .test_n_all_and_update::<K, C::Instant, S, MW>(self.start, key, n, &self.state, now)
     }
 
     /// Allow *only all* `n` cells through the rate limiter for the given key.
@@ -114,13 +130,7 @@ where
         key: &K,
         n: NonZeroU32,
     ) -> Result<Result<MW::PositiveOutcome, MW::NegativeOutcome>, InsufficientCapacity> {
-        self.gcra.test_n_all_and_update::<K, C::Instant, S, MW>(
-            self.start,
-            key,
-            n,
-            &self.state,
-            self.clock.now(),
-        )
+        self.check_key_n_at(key, n, self.clock.now())
     }
 }
 
