@@ -1,4 +1,4 @@
-#![cfg(all(feature = "std", feature = "dashmap"))]
+#![cfg(all(feature = "std", feature = "scc"))]
 
 use std::prelude::v1::*;
 
