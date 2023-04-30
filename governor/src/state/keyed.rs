@@ -91,12 +91,8 @@ where
     /// If the rate limit is reached, `check_key` returns information about the earliest
     /// time that a cell might be allowed through again under that key.
     pub fn check_key(&self, key: &K) -> Result<MW::PositiveOutcome, MW::NegativeOutcome> {
-        self.gcra.test_and_update::<K, C::Instant, S, MW>(
-            self.start,
-            key,
-            &self.state,
-            self.clock.now(),
-        )
+        self.gcra
+            .test_and_update::<K, C::Instant, S, MW>(self.start, key, &self.state, self.clock.now())
     }
 
     /// Allow *only all* `n` cells through the rate limiter for the given key.
@@ -214,11 +210,23 @@ mod hashmap;
 
 pub use hashmap::HashMapStateStore;
 
+#[cfg(not(feature = "ahash"))]
+type HashBuilder = std::collections::hash_map::RandomState;
+
+#[cfg(feature = "ahash")]
+type HashBuilder = ahash::RandomState;
+
 #[cfg(all(feature = "std", feature = "dashmap"))]
 mod dashmap;
 
 #[cfg(all(feature = "std", feature = "dashmap"))]
 pub use self::dashmap::DashMapStateStore;
+
+#[cfg(all(feature = "std", feature = "scc"))]
+mod scc;
+
+#[cfg(all(feature = "std", feature = "scc"))]
+pub use self::scc::SccHashMapStateStore;
 
 #[cfg(feature = "std")]
 mod future;

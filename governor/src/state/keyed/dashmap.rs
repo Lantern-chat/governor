@@ -10,7 +10,7 @@ use dashmap::DashMap;
 use std::hash::Hash;
 
 /// A concurrent, thread-safe and fairly performant hashmap based on [`DashMap`].
-pub type DashMapStateStore<K> = DashMap<K, InMemoryState>;
+pub type DashMapStateStore<K> = DashMap<K, InMemoryState, super::HashBuilder>;
 
 impl<K: Hash + Eq + Clone> StateStore for DashMapStateStore<K> {
     type Key = K;

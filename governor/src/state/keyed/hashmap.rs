@@ -17,7 +17,7 @@ use parking_lot::Mutex;
 ///
 /// The `HashMapStateStore` is the default state store in `std` when no other thread-safe
 /// features are enabled.
-pub type HashMapStateStore<K> = Mutex<HashMap<K, InMemoryState>>;
+pub type HashMapStateStore<K> = Mutex<HashMap<K, InMemoryState, super::HashBuilder>>;
 
 impl<K: Hash + Eq + Clone> StateStore for HashMapStateStore<K> {
     type Key = K;
@@ -32,9 +32,7 @@ impl<K: Hash + Eq + Clone> StateStore for HashMapStateStore<K> {
             return v.measure_and_replace_one(f);
         }
         // not-so-fast path: make a new entry and measure it.
-        let entry = (*map)
-            .entry(key.clone())
-            .or_insert_with(InMemoryState::default);
+        let entry = (*map).entry(key.clone()).or_insert_with(InMemoryState::default);
         entry.measure_and_replace_one(f)
     }
 }
@@ -68,7 +66,7 @@ where
 {
     /// Constructs a new rate limiter with a custom clock, backed by a [`HashMap`].
     pub fn hashmap_with_clock(quota: Quota, clock: &C) -> Self {
-        let state: HashMapStateStore<K> = Mutex::new(HashMap::new());
+        let state: HashMapStateStore<K> = Mutex::new(HashMap::default());
         RateLimiter::new(quota, state, clock)
     }
 }
